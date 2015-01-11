@@ -16,6 +16,10 @@ from pymongo import Connection
 
 MONGO_URL = environ.get('MONGOHQ_URL')
 
+EXTJS_CDN_JS = 'https://cdnjs.cloudflare.com/ajax/libs/extjs/4.2.1/ext-all.js'
+EXTJS_CDN_CSS = 'https://cdnjs.cloudflare.com/ajax/libs/extjs/4.2.1/resources/css/ext-all.css'
+
+
 if MONGO_URL:
     connection = Connection(MONGO_URL)
     db = connection[urlparse(MONGO_URL).path[1:]]
@@ -30,6 +34,13 @@ app = Flask(__name__)
 def index():
     return render_template('index.html')
 
+
+@app.route('/admin/')
+@app.route('/admin/<page_name>')
+def admin(page_name='dictionary'):
+    if page_name in ('dictionary',):
+        return render_template('admin.html', extjs_js=EXTJS_CDN_JS, extjs_css=EXTJS_CDN_CSS)
+    return render_template('404.html'), 404
 
 @app.route('/v1/terms/')
 def terms():
@@ -46,12 +57,12 @@ def terms():
     terms_list = list()
     for term in terms_iter:
         terms_list.append({
-            'name': term['name'],
-            'description': term['description'],
-            'last_update': term['last_update']
+            'name': term.get('name'),
+            'description': term.get('description'),
+            'last_update': term.get('last_update')
         })
     return jsonify(**{'terms': terms_list})
 
 
 if __name__ == '__main__':
-    app.run()
+    app.run(debug=True)
